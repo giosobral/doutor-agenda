@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UserRoundPlus } from "lucide-react";
+import { Loader2, UserRoundPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(50),
@@ -38,6 +39,7 @@ const registerSchema = z.object({
 });
 
 const SignUpForm = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -47,8 +49,19 @@ const SignUpForm = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof registerSchema>) => {
-    console.log(data);
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
+    await authClient.signUp.email(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
+      {
+        onSuccess: () => {
+          router.push("/dashboard");
+        },
+      },
+    );
   };
 
   return (
@@ -93,7 +106,11 @@ const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input placeholder="Defina sua senha" {...field} />
+                    <Input
+                      placeholder="Defina sua senha"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,9 +118,21 @@ const SignUpForm = () => {
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
-              Criar conta
-              <UserRoundPlus />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                <>
+                  Criar conta <UserRoundPlus />{" "}
+                </>
+              )}
             </Button>
           </CardFooter>
         </form>
