@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 
 import SignOutButton from "../dashboard/_components/sign-out-button";
 
@@ -55,6 +57,7 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const session = authClient.useSession();
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
@@ -83,7 +86,19 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger>Clínica</DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size="lg">
+                  <Avatar>
+                    <AvatarFallback>G</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm">{session.data?.user.clinic?.name}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {session.data?.user.email}
+                    </p>
+                  </div>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem asChild>
                   <SignOutButton />
