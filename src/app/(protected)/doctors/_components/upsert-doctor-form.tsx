@@ -1,8 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
+import { toast } from "sonner";
 import z from "zod";
 
+import { upsertDoctor } from "@/actions/upsert-doctor";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -29,57 +33,90 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { doctorsTable } from "@/db/schema";
 
 import { medicalSpecialties } from "../_constants";
 
-const formSchema = z
-  .object({
-    name: z.string().min(1, { message: "Nome é obrigatório" }),
-    speciality: z.string().min(1, { message: "Especialidade é obrigatória" }),
-    appointmentPrice: z
-      .number()
-      .min(1, { message: "Preço da consulta é obrigatório" }),
-    availableFromWeekDay: z
-      .string()
-      .min(0, { message: "Dia da semana de disponibilidade é obrigatório" }),
-    availableToWeekDay: z
-      .string()
-      .min(0, { message: "Dia da semana de disponibilidade é obrigatório" }),
-    availableFromTime: z
-      .string()
-      .min(1, { message: "Hora de início é obrigatória" }),
-    availableToTime: z
-      .string()
-      .min(1, { message: "Hora de término é obrigatória" }),
-  })
-  .refine(
-    (data) => {
-      const fromTime = data.availableFromTime as string;
-      const toTime = data.availableToTime as string;
-      return fromTime < toTime;
-    },
-    {
-      message: "O horário final não pode ser anterior ao horário de término.",
-      path: ["availableToTime"],
-    },
-  );
+const formSchema = z.object({
+  name: z.string().min(1, { message: "Nome é obrigatório" }),
+  speciality: z.string().min(1, { message: "Especialidade é obrigatória" }),
+  appointmentPrice: z
+    .number()
+    .min(1, { message: "Preço da consulta é obrigatório" }),
+  availableFromWeekDay: z
+    .string()
+    .min(0, { message: "Dia da semana de disponibilidade é obrigatório" }),
+  availableToWeekDay: z
+    .string()
+    .min(0, { message: "Dia da semana de disponibilidade é obrigatório" }),
+  availableFromTime: z
+    .string()
+    .min(1, { message: "Hora de início é obrigatória" }),
+  availableToTime: z
+    .string()
+    .min(1, { message: "Hora de término é obrigatória" }),
+});
 
-const UpsertDoctorForm = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
+type FormSchema = z.infer<typeof formSchema>;
+
+interface UpsertDoctorFormProps {
+  doctor?: typeof doctorsTable.$inferSelect;
+  onSuccess?: () => void;
+}
+
+const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      speciality: "",
-      appointmentPrice: 0,
-      availableFromWeekDay: "1",
-      availableToWeekDay: "5",
-      availableFromTime: "",
-      availableToTime: "",
+      name: doctor?.name ?? "",
+      speciality: doctor?.speciality ?? "",
+      appointmentPrice: doctor?.appointmentsPriceInCents
+        ? doctor.appointmentsPriceInCents / 100
+        : 0,
+      availableFromWeekDay: doctor?.availableFromWeekDay?.toString() ?? "1",
+      availableToWeekDay: doctor?.availableToWeekDay?.toString() ?? "5",
+      availableFromTime: doctor?.availableFromTime ?? "",
+      availableToTime: doctor?.availableToTime ?? "",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+  const upsertDoctorAction = useAction(upsertDoctor, {
+    onSuccess: () => {
+      toast.success("Médico adicionado com sucesso.");
+      onSuccess?.();
+    },
+    onError: () => {
+      toast.error("Erro ao adicionar médico.");
+    },
+  });
+
+  const onSubmit = (formData: FormSchema) => {
+    const fromTime = formData.availableFromTime as string;
+    const toTime = formData.availableToTime as string;
+
+    if (fromTime >= toTime) {
+      form.setError("availableToTime", {
+        type: "manual",
+        message: "O horário final não pode ser anterior ao horário de término.",
+      });
+      return;
+    }
+
+    const availableFromWeekDay = parseInt(
+      formData.availableFromWeekDay as string,
+    );
+    const availableToWeekDay = parseInt(formData.availableToWeekDay as string);
+    const appointmentsPriceInCents = Math.round(
+      (formData.appointmentPrice as number) * 100,
+    );
+
+    upsertDoctorAction.execute({
+      ...formData,
+      id: doctor?.id,
+      availableFromWeekDay,
+      availableToWeekDay,
+      appointmentsPriceInCents,
+    });
   };
 
   return (
@@ -352,7 +389,13 @@ const UpsertDoctorForm = () => {
             )}
           />
           <DialogFooter>
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit" disabled={upsertDoctorAction.isPending}>
+              {upsertDoctorAction.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Adicionar"
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </Form>
