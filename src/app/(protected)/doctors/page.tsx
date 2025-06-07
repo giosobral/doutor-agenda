@@ -1,6 +1,6 @@
-import { Plus } from "lucide-react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
 import {
   PageActions,
   PageContainder,
@@ -10,8 +10,22 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
+import { auth } from "@/lib/auth";
 
-const DoctorsPage = () => {
+import AddDoctorButton from "./_components/add-doctor-button";
+
+const DoctorsPage = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    redirect("/authentication");
+  }
+  if (!session?.user.clinic) {
+    redirect("/clinic-form");
+  }
+
   return (
     <PageContainder>
       <PageHeader>
@@ -20,10 +34,7 @@ const DoctorsPage = () => {
           <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <Button>
-            <Plus />
-            Adicionar Médico
-          </Button>
+          <AddDoctorButton />
         </PageActions>
       </PageHeader>
       <PageContent>
