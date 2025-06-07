@@ -35,6 +35,7 @@ import {
 import { doctorsTable } from "@/db/schema";
 
 import { medicalSpecialties } from "../_constants";
+import DeleteDoctorButton from "./delete-doctor-button";
 
 const formSchema = z
   .object({
@@ -389,6 +390,7 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
             )}
           />
           <DialogFooter>
+            {doctor && <DeleteDoctorButton doctor={doctor} />}
             <Button type="submit" disabled={upsertDoctorAction.isPending}>
               {upsertDoctorAction.isPending
                 ? "Salvando..."
