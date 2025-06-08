@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
-import SignOutButton from "../dashboard/_components/sign-out-button";
+import SignOutButton from "./sign-out-button";
 
 // Menu items.
 const items = [
