@@ -64,7 +64,7 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
         </Badge>
       </CardContent>
       <Separator />
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button className="w-full"> Ver Detalhes</Button>
@@ -77,6 +77,7 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
               availableToTime: availability.to.format("HH:mm:ss"),
             }}
             onSuccess={() => setIsOpen(false)}
+            isOpen={isOpen}
           />
         </Dialog>
       </CardFooter>
