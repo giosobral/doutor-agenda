@@ -1,18 +1,10 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { patientsTable } from "@/db/schema";
+
+import PatientTableActions from "./table-actions";
 
 type Patient = typeof patientsTable.$inferSelect;
 
@@ -53,29 +45,10 @@ export const PatientTableColumns: ColumnDef<Patient>[] = [
   },
   {
     id: "actions",
+    header: "Ações",
     cell: (params) => {
       const patient = params.row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>{patient.name}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Trash className="mr-2 h-4 w-4" />
-              Excluir
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <PatientTableActions patient={patient} />;
     },
   },
 ];
