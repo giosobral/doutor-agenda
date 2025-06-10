@@ -114,11 +114,7 @@ const UpsertDoctorForm = ({
 
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
-      if (!doctor) {
-        toast.success("Médico adicionado com sucesso.");
-        return;
-      }
-      toast.success("Médico atualizado com sucesso.");
+      toast.success("Médico salvo com sucesso.");
       onSuccess?.();
     },
     onError: () => {
